@@ -1,6 +1,7 @@
 #pragma once
 
 #include <util/system/types.h>
+#include <algorithm>
 #include <vector>
 #include <iostream>
 
@@ -20,6 +21,36 @@ struct FreqBucket {
 template<class TBucket>
 struct Histogram {
     std::vector<TBucket> buckets;
+
+    Histogram() = default;
+
+    Histogram(std::vector<TBucket> buckets) 
+    : buckets(std::move(buckets))
+    { }
+
+    Histogram<Bucket>(std::vector<i64> data, i32 parts)
+    : buckets()
+    {
+        buckets.reserve(parts);
+        std::sort(data.begin(), data.end());
+        size_t approx = data.size() / parts;
+
+        i64 prev = data[0];
+        i64 left = 0;
+        i32 partNum = 1;
+        for (size_t i = 0; i < data.size(); i++) {
+            if (i - left >= approx && data[i] != prev) {
+                if (partNum == parts) {
+                    break;
+                }
+                buckets.emplace_back(data[left], data[i], i - left );
+                left = i;
+                partNum++;
+            }
+            prev = data[i];
+        }
+        buckets.emplace_back(data[left], data[data.size() - 1], data.size() - left );
+    }
 };
 
 Histogram<FreqBucket> multiMerge(const std::vector<Histogram<Bucket>>& sources);

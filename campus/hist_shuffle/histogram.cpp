@@ -5,6 +5,7 @@
 #include <queue>
 #include <unordered_map>
 
+
 struct pair_hash
 {
     std::size_t operator() (const std::pair<ui32, ui32> &pair) const
