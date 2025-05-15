@@ -395,6 +395,14 @@ std::tuple<TVector<ui64>, TVector<ui64>, TVector<ui64>, TVector<ui64>, TVector<T
 std::tuple<TVector<ui64>, TVector<ui64>, TVector<ui64>, TVector<TString>>
 >
 Query1GenerateData(ui64& datasetSize) {
+    std::cerr << 
+     "* Query #1:\n"
+     "*  - Selectivity: 5%       <-- Main query characteristic\n"
+     "*  - Cols 1 and 2 are keys\n"
+     "*  - Left row max size: 80\n"
+     "*  - Right row max size: 56\n"
+     "*  - Left size: 600_000, right size: 60_000\n"
+     << std::endl;
     std::mt19937 rng(std::random_device{}());
     const ui64 leftRowsCount = 600'000;
     const ui64 rightRowsCount = 60'000;
@@ -477,6 +485,14 @@ std::tuple<TVector<ui64>, TVector<ui64>, TVector<ui64>, TVector<ui64>, TVector<T
 std::tuple<TVector<ui64>, TVector<ui64>, TVector<ui64>, TVector<TString>>
 >
 Query2GenerateData(ui64& datasetSize) {
+    std::cerr << 
+         " * Query #2:\n"
+         " *  - Selectivity: 20%       <-- Main query characteristic\n"
+         " *  - Cols 1 and 2 are keys\n"
+         " *  - Left row max size: 80\n"
+         " *  - Right row max size: 56\n"
+         " *  - Left size: 600_000, right size: 60_000\n"
+    << std::endl;
     std::mt19937 rng(std::random_device{}());
     const ui64 leftRowsCount = 600'000;
     const ui64 rightRowsCount = 60'000;
@@ -559,6 +575,13 @@ std::tuple<TVector<ui64>, TVector<ui64>, TVector<ui64>, TVector<ui64>, TVector<T
 std::tuple<TVector<ui64>, TVector<ui64>, TVector<ui64>, TVector<TString>>
 >
 Query3GenerateData(ui64& datasetSize) {
+    std::cerr << 
+         "*  - Selectivity: 50%       <-- Main query characteristic\n"
+         "*  - Cols 1 and 2 are keys\n"
+         "*  - Left row max size: 80\n"
+         "*  - Right row max size: 56\n"
+         "*  - Left size: 600_000, right size: 60_000\n"
+    << std::endl;
     std::mt19937 rng(std::random_device{}());
     const ui64 leftRowsCount = 600'000;
     const ui64 rightRowsCount = 60'000;
@@ -641,6 +664,13 @@ std::tuple<TVector<ui64>, TVector<ui64>, TVector<ui64>, TVector<ui64>, TVector<T
 std::tuple<TVector<ui64>, TVector<ui64>, TVector<ui64>, TVector<TString>>
 >
 Query4GenerateData(ui64& datasetSize) {
+    std::cerr << 
+         "*  - Selectivity: 70%       <-- Main query characteristic\n"
+         "*  - Cols 1 and 2 are keys\n"
+         "*  - Left row max size: 80\n"
+         "*  - Right row max size: 56\n"
+         "*  - Left size: 600_000, right size: 60_000\n"
+ << std::endl;
     std::mt19937 rng(std::random_device{}());
     const ui64 leftRowsCount = 600'000;
     const ui64 rightRowsCount = 60'000;
@@ -723,6 +753,13 @@ std::tuple<TVector<ui64>, TVector<ui64>, TVector<ui64>, TVector<ui64>, TVector<T
 std::tuple<TVector<ui64>, TVector<ui64>, TVector<ui64>, TVector<TString>>
 >
 Query5GenerateData(ui64& datasetSize) {
+    std::cerr << 
+         "*  - Selectivity: 100%       <-- Main query characteristic, modeling foreign key join\n"
+         "*  - Col 1 is key\n"
+         "*  - Left row max size: 80\n"
+         "*  - Right row max size: 56\n"
+         "*  - Left size: 600_000, right size: 60_000\n"
+    << std::endl;
     std::mt19937 rng(std::random_device{}());
     const ui64 leftRowsCount = 600'000;
     const ui64 rightRowsCount = 60'000;
@@ -788,6 +825,13 @@ std::tuple<TVector<ui64>, TVector<ui64>, TVector<ui64>, TVector<ui64>, TVector<u
 std::tuple<TVector<ui64>, TVector<ui64>, TVector<ui64>, TVector<TString>>
 >
 Query6GenerateData(ui64& datasetSize) {
+    std::cerr << 
+         "*  - Selectivity: 10%               <-- Main query characteristic\n"
+         "*  - Cols 1 and 2 are keys\n"
+         "*  - Left row max size: 152         <-- Main query characteristic, wide probe tuples\n"
+         "*  - Right row max size: 56\n"
+         "*  - Left size: 600_000, right size: 60_000\n"
+    << std::endl;
     std::mt19937 rng(std::random_device{}());
     const ui64 leftRowsCount = 600'000;
     const ui64 rightRowsCount = 60'000;
@@ -888,6 +932,13 @@ std::tuple<TVector<ui64>, TVector<ui64>, TVector<ui64>, TVector<ui64>, TVector<u
 std::tuple<TVector<ui64>, TVector<ui64>, TVector<ui64>, TVector<TString>>
 >
 Query7GenerateData(ui64& datasetSize) {
+    std::cerr << 
+         "*  - Selectivity: 50%               <-- Main query characteristic\n"
+         "*  - Cols 1 and 2 are keys\n"
+         "*  - Left row max size: 152         <-- Main query characteristic, wide probe tuples\n"
+         "*  - Right row max size: 56\n"
+         "*  - Left size: 600_000, right size: 60_000\n"
+    << std::endl;
     std::mt19937 rng(std::random_device{}());
     const ui64 leftRowsCount = 600'000;
     const ui64 rightRowsCount = 60'000;
@@ -988,6 +1039,13 @@ std::tuple<TVector<ui64>, TVector<ui64>, TVector<ui64>, TVector<TString>>,
 std::tuple<TVector<ui64>, TVector<ui64>, TVector<ui64>, TVector<ui64>, TVector<ui64>, TVector<ui64>, TVector<ui64>, TVector<ui64>, TVector<ui64>, TVector<ui64>, TVector<ui64>, TVector<ui64>, TVector<ui64>, TVector<TString>, TVector<TString>>
 >
 Query8GenerateData(ui64& datasetSize) {
+    std::cerr << 
+         "*  - Selectivity: 10%\n"
+         "*  - Cols 1 and 2 are keys\n"
+         "*  - Left row max size: 56\n"
+         "*  - Right row max size: 152         <-- Main query characteristic, wide build tuples\n"
+         "*  - Left size: 400_000, right size: 20_000\n"
+    << std::endl;
     std::mt19937 rng(std::random_device{}());
     const ui64 leftRowsCount = 400'000;
     const ui64 rightRowsCount = 20'000;
@@ -1088,6 +1146,13 @@ std::tuple<TVector<ui64>, TVector<ui64>, TVector<ui64>, TVector<ui64>>,
 std::tuple<TVector<ui64>, TVector<ui64>, TVector<ui64>, TVector<ui64>>
 >
 Query9GenerateData(ui64& datasetSize) {
+    std::cerr << 
+         "*  - Selectivity: 10%\n"
+         "*  - Col 1 is key\n"
+         "*  - Left row max size: 32\n"
+         "*  - Right row max size: 32\n"
+         "*  - Left size: 40_000, right size: 40_000   <-- Main query characteristic\n"
+    << std::endl;
     std::mt19937 rng(std::random_device{}());
     const ui64 leftRowsCount = 40'000;
     const ui64 rightRowsCount = 40'000;
@@ -1154,6 +1219,13 @@ std::tuple<TVector<ui64>, TVector<ui64>, TVector<ui64>, TVector<ui64>>,
 std::tuple<TVector<ui64>, TVector<ui64>, TVector<ui64>, TVector<ui64>>
 >
 Query10GenerateData(ui64& datasetSize) {
+    std::cerr << 
+         "*  - Selectivity: 10%\n"
+         "*  - Col 1 is key\n"
+         "*  - Left row max size: 32\n"
+         "*  - Right row max size: 32\n"
+         "*  - Left size: 1_200_000, right size: 40_000   <-- Main query characteristic\n"
+    << std::endl;
     std::mt19937 rng(std::random_device{}());
     const ui64 leftRowsCount = 1'200'000;
     const ui64 rightRowsCount = 40'000;
@@ -1220,6 +1292,13 @@ std::tuple<TVector<ui64>, TVector<ui64>, TVector<ui64>, TVector<ui64>, TVector<T
 std::tuple<TVector<ui64>, TVector<ui64>, TVector<ui64>, TVector<TString>>
 >
 Query11GenerateData(ui64& datasetSize) {
+    std::cerr << 
+         "*  - Selectivity: 10%                           <-- Main query characteristic\n"
+         "*  - Cols 1 and 2 are keys\n"
+         "*  - Left row max size: 80\n"
+         "*  - Right row max size: 56\n"
+         "*  - Left size: 1_200_000, right size: 600_000  <-- Main query characteristic, grace join oriented sizes\n"
+    << std::endl;
     std::mt19937 rng(std::random_device{}());
     const ui64 leftRowsCount = 1'200'000;
     const ui64 rightRowsCount = 600'000;
@@ -1302,6 +1381,13 @@ std::tuple<TVector<ui64>, TVector<ui64>, TVector<ui64>, TVector<ui64>, TVector<T
 std::tuple<TVector<ui64>, TVector<ui64>, TVector<ui64>, TVector<TString>>
 >
 Query12GenerateData(ui64& datasetSize) {
+    std::cerr << 
+         "*  - Selectivity: 25%                            <-- Main query characteristic\n"
+         "*  - Cols 1 and 2 are keys\n"
+         "*  - Left row max size: 80\n"
+         "*  - Right row max size: 56\n"
+         "*  - Left size: 1_200_000, right size: 600_000   <-- Main query characteristic, grace join oriented sizes\n"
+    << std::endl;
     std::mt19937 rng(std::random_device{}());
     const ui64 leftRowsCount = 1'200'000;
     const ui64 rightRowsCount = 600'000;
@@ -1384,6 +1470,13 @@ std::tuple<TVector<ui64>, TVector<ui64>, TVector<ui64>, TVector<ui64>, TVector<T
 std::tuple<TVector<ui64>, TVector<ui64>, TVector<ui64>, TVector<TString>>
 >
 Query13GenerateData(ui64& datasetSize) {
+    std::cerr << 
+         "*  - Selectivity: 50%                            <-- Main query characteristic\n"
+         "*  - Cols 1 and 2 are keys\n"
+         "*  - Left row max size: 80\n"
+         "*  - Right row max size: 56\n"
+         "*  - Left size: 1_200_000, right size: 600_000   <-- Main query characteristic, grace join oriented sizes\n"
+    << std::endl;
     std::mt19937 rng(std::random_device{}());
     const ui64 leftRowsCount = 1'200'000;
     const ui64 rightRowsCount = 600'000;
@@ -1452,6 +1545,87 @@ Query13GenerateData(ui64& datasetSize) {
         std::make_tuple(std::move(rightCol1), std::move(rightCol2), std::move(rightCol3), std::move(rightCol4))
     };
 }
+
+std::pair<
+std::tuple<TVector<ui64>, TVector<ui64>, TVector<ui64>, TVector<ui64>, TVector<TString>, TVector<TString>>,
+std::tuple<TVector<ui64>, TVector<ui64>, TVector<ui64>, TVector<TString>>
+>
+Query14GenerateData(ui64 keyRepeats, ui64& datasetSize) {
+    ui64 count = 1000000;
+    std::mt19937 rng(std::random_device{}());
+    const ui64 leftRowsCount = count;
+    const ui64 rightRowsCount = count;
+    std::cerr << 
+        "Q14." << std::endl <<
+        "left table rows: " << leftRowsCount << std::endl <<
+        "right table rows: " << rightRowsCount << std::endl << 
+        "key repeats: " << keyRepeats
+    << std::endl;
+
+    datasetSize = leftRowsCount * 32 + rightRowsCount * 24;
+
+    TVector<ui64> leftCol1(leftRowsCount);
+    std::iota(leftCol1.begin(), leftCol1.end(), 0);
+    TVector<ui64> leftCol2(leftRowsCount);
+    std::iota(leftCol2.begin(), leftCol2.end(), 0);
+    TVector<ui64> leftCol3(leftRowsCount);
+    std::iota(leftCol3.begin(), leftCol3.end(), 0);
+    TVector<ui64> leftCol4(leftRowsCount);
+    std::iota(leftCol4.begin(), leftCol4.end(), 0);
+    TVector<TString> leftCol5(leftRowsCount);
+    for (auto& s: leftCol5) {
+        auto sz = 8 + rng() % 24;
+        datasetSize += sz;
+        s = GenerateRandomString(sz);
+    }
+    TVector<TString> leftCol6(leftRowsCount);
+    for (auto& s: leftCol6) {
+        auto sz = 6 + rng() % 10;
+        datasetSize += sz;
+        s = GenerateRandomString(sz);
+    }
+
+    TVector<ui64> rightCol1(rightRowsCount);
+    std::iota(rightCol1.begin(), rightCol1.end(), 0);
+    TVector<ui64> rightCol2(rightRowsCount);
+    std::iota(rightCol2.begin(), rightCol2.end(), leftRowsCount);
+    TVector<ui64> rightCol3(rightRowsCount);
+    std::iota(rightCol3.begin(), rightCol3.end(), leftRowsCount);
+    TVector<TString> rightCol4(rightRowsCount);
+    for (auto& s: rightCol4) {
+        auto sz = 8 + rng() % 24;
+        datasetSize += sz;
+        s = GenerateRandomString(sz);
+    }
+
+    ui64 index = 0;
+    for (ui64 i = 0; i < leftRowsCount; ++i) {
+        rightCol1[i] = leftCol1[index];
+        if (i % keyRepeats == 0) {
+            ++index;
+        }
+    }
+
+    // Перемешивание
+    std::shuffle(leftCol1.begin(), leftCol1.end(), rng);
+    std::shuffle(rightCol1.begin(), rightCol1.end(), rng);
+
+    // for (ui64 i = 0; i <  leftRowsCount; ++i) {
+    //     std::cerr << leftCol1[i] << " ";
+    // }
+    // std::cerr << std::endl;
+
+    // for (ui64 i = 0; i <  rightRowsCount; ++i) {
+    //     std::cerr << rightCol1[i] << " ";
+    // }
+    // std::cerr << std::endl;
+
+    return {
+        std::make_tuple(std::move(leftCol1), std::move(leftCol2), std::move(leftCol3), std::move(leftCol4), std::move(leftCol5), std::move(leftCol6)),
+        std::make_tuple(std::move(rightCol1), std::move(rightCol2), std::move(rightCol3), std::move(rightCol4))
+    };
+}
+
 
 } // namespace
 
@@ -1942,6 +2116,46 @@ Y_UNIT_TEST_SUITE(TMiniKQLJoinBenchmarks) {
         }
 
         Cerr << globalResourceMeter.GetFullLog(datasetSize) << Endl;
+    } // Y_UNIT_TEST(BenchQ13)
+
+    Y_UNIT_TEST(BenchQ14) {
+        for (int keyRepeats : {10, 100, 1000, 10000}) {
+            ui64 datasetSize = 0;
+            Cerr << ">>> Benchmark Q14:" << Endl;
+            auto [lhs, rhs] = Query14GenerateData(keyRepeats, datasetSize);
+
+            for (auto type: {JoinType::BlockGraceJoin_HashJoin,
+                    JoinType::BlockGraceJoin_InMemoryGraceJoin,
+                    JoinType::BlockMapJoin,
+                    JoinType::GraceJoin})
+            {
+                TSetup<false> setup(GetNodeFactory());
+
+                auto [leftType, leftList] = ConvertVectorsToTuples(setup,
+                        std::get<0>(lhs), std::get<1>(lhs), std::get<2>(lhs), std::get<3>(lhs), std::get<4>(lhs), std::get<5>(lhs));
+                auto [rightType, rightList] = ConvertVectorsToTuples(setup,
+                        std::get<0>(rhs), std::get<1>(rhs), std::get<2>(rhs), std::get<3>(rhs));
+
+                if (type == JoinType::GraceJoin) {
+                    RunBenchGraceJoin(
+                            setup,
+                            leftType, std::move(leftList), {0},
+                            rightType, std::move(rightList), {0},
+                            {}, {0}
+                            );
+                } else {
+                    RunBenchBlockJoin(
+                            setup, type, 32,
+                            leftType, std::move(leftList), {0},
+                            rightType, std::move(rightList), {0},
+                            {}, {0}
+                            );
+                }
+            }
+
+            Cerr << globalResourceMeter.GetFullLog(datasetSize) << Endl;
+
+        }
     } // Y_UNIT_TEST(BenchQ13)
 
 } // Y_UNIT_TEST_SUITE
