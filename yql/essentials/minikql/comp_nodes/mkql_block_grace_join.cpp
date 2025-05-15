@@ -235,9 +235,7 @@ public:
 
         // TODO: change this values to stream sizes given from optimizer
         auto [lTuples, rTuples] = GetFetchedTuples();
-        // Another weird heuristic to get number of buckets for cardinality estimation
-        auto buckets = max<ui64>(max<ui64>(lTuples, rTuples) / 2000, 1); // 1/20 (5%) * 1/100 (step) -> 1/2000
-        NPackedTuple::CardinalityEstimator estimator{buckets};
+        NPackedTuple::CardinalityEstimator estimator{16};
         return estimator.Estimate(lTuples, LeftSamples_, rTuples, RightSamples_);
     }
 
@@ -674,6 +672,7 @@ public:
 
         auto& tempStorage = *static_cast<TTempJoinStorage*>(tempStorageValue.AsBoxed().Get());
         auto [leftFetchedTuples, rightFetchedTuples] = tempStorage.GetFetchedTuples();
+        auto maxFetchedTuples = std::max(leftFetchedTuples, rightFetchedTuples);
         auto [leftPSz, rightPSz] = tempStorage.GetPayloadSizes();
         auto cardinality = tempStorage.EstimateCardinality(); // bootstrap value, may be far from truth
         auto [isLeftFinished, isRightFinished] = tempStorage.IsFinished();
@@ -698,7 +697,7 @@ public:
         BuildKeyColumnsSet_ = THashSet<ui32>(BuildKeyColumns_->begin(), BuildKeyColumns_->end());
         // Use or not external payload depends on the policy
         IsBuildIndirected_ = policy->UseExternalPayload(
-            EJoinAlgo::HashJoin, leftPSz, leftFetchedTuples / cardinality);
+            EJoinAlgo::HashJoin, leftPSz, maxFetchedTuples / cardinality);
 
         ProbeStream_ = *rightStream;
         ProbeData_ = std::move(rightData);
@@ -707,7 +706,7 @@ public:
         ProbeKeyColumnsSet_ = THashSet<ui32>(ProbeKeyColumns_->begin(), ProbeKeyColumns_->end());
         // Use or not external payload depends on the policy
         IsProbeIndirected_ = policy->UseExternalPayload(
-            EJoinAlgo::HashJoin, rightPSz, rightFetchedTuples / cardinality);
+            EJoinAlgo::HashJoin, rightPSz, maxFetchedTuples / cardinality);
 
         // Create converters
         TVector<TType*> leftItemTypes;
@@ -887,39 +886,31 @@ private:
         auto  tuple = joinState.ProbePackedInput.PackedTuples.data();
         auto  nTuples = joinState.ProbePackedInput.NTuples;
         auto  overflow = joinState.ProbePackedInput.Overflow.data();
-
-        constexpr auto batchSize = 16;
         
-    if constexpr (false) { /// ignore batch api switch (test purpose)
-        using TIterPair = std::pair<TTable::TIterator, const ui8*>;
-        TVector<TIterPair> iterators(batchSize);
+    if constexpr (true) {  /// ignore batch api switch (test purpose)
+        for (size_t i = 0; i < nTuples; i++, tuple += probeLayout->TotalRowSize) {
+            /// TODO: deduplicate logic by moving tuples join code into dedicated func
+            auto it = Table_.Find(tuple, overflow);
 
-        for (size_t i = 0; i < nTuples; i += batchSize) {
-            auto remaining = std::min<ui64>(batchSize, nTuples - i);
-            for (size_t offset = 0; offset < remaining; ++offset, tuple += probeLayout->TotalRowSize) {
-                iterators[offset] = {Table_.Find(tuple, overflow), tuple};
-            }
+            const ui8* foundTuple = nullptr;
+            while ((foundTuple = Table_.NextMatch(it, overflow)) != nullptr) {
+                // Copy tuple from build part into output
+                auto prevSize = joinState.BuildPackedOutput.size();
+                joinState.BuildPackedOutput.resize(prevSize + buildLayout->TotalRowSize);
+                std::copy(foundTuple, foundTuple + buildLayout->TotalRowSize, joinState.BuildPackedOutput.data() + prevSize);
 
-            for (size_t offset = 0; offset < remaining; ++offset) {
-                auto [it, inTuple] = iterators[offset];
-                const ui8* foundTuple = nullptr;
-                while ((foundTuple = Table_.NextMatch(it, overflow)) != nullptr) {
-                    // Copy tuple from build part into output
-                    auto prevSize = joinState.BuildPackedOutput.size();
-                    joinState.BuildPackedOutput.resize(prevSize + buildLayout->TotalRowSize);
-                    std::copy(foundTuple, foundTuple + buildLayout->TotalRowSize, joinState.BuildPackedOutput.data() + prevSize);
+                // Copy tuple from probe part into output
+                prevSize = joinState.ProbePackedOutput.size();
+                joinState.ProbePackedOutput.resize(prevSize + probeLayout->TotalRowSize);
+                std::copy(tuple, tuple + probeLayout->TotalRowSize, joinState.ProbePackedOutput.data() + prevSize);
 
-                    // Copy tuple from probe part into output
-                    prevSize = joinState.ProbePackedOutput.size();
-                    joinState.ProbePackedOutput.resize(prevSize + probeLayout->TotalRowSize);
-                    std::copy(inTuple, inTuple + probeLayout->TotalRowSize, joinState.ProbePackedOutput.data() + prevSize);
-
-                    // New row added
-                    joinState.OutputRows++;
-                }
+                // New row added
+                joinState.OutputRows++;
             }
         }
     } else {
+        constexpr auto batchSize = 16;
+
         for (size_t i = 0; i < nTuples; i += batchSize) {
             auto remaining = std::min<ui64>(batchSize, nTuples - i);
 
@@ -1045,7 +1036,7 @@ public:
         const size_t leftTupleSize = leftRowsNum * LeftConverter_->GetTupleLayout()->TotalRowSize;
         const size_t rightTupleSize = rightRowsNum * RightConverter_->GetTupleLayout()->TotalRowSize;
         const size_t minTupleSize = std::min(leftTupleSize, rightTupleSize);
-        constexpr size_t bucketDesiredSize = 4 * L2_CACHE_SIZE;
+        constexpr size_t bucketDesiredSize = 16 * L2_CACHE_SIZE;
 
         BucketsLogNum_ = minTupleSize ? sizeof(size_t) * 8 - std::countl_zero((minTupleSize - 1) / bucketDesiredSize) : 0;
         LeftBuckets_.resize(1u << BucketsLogNum_);
@@ -1055,8 +1046,6 @@ public:
         const size_t leftOverflowSizeEst = CalculateExpectedOverflowSize(LeftConverter_->GetTupleLayout(), leftRowsNum >> BucketsLogNum_);
         const size_t rightOverflowSizeEst = CalculateExpectedOverflowSize(RightConverter_->GetTupleLayout(), rightRowsNum >> BucketsLogNum_);
         for (ui32 bucket = 0; bucket < (1u << BucketsLogNum_); ++bucket) {
-            LeftBuckets_[bucket].PackedTuples.reserve(bucketDesiredSize);
-            RightBuckets_[bucket].PackedTuples.reserve(bucketDesiredSize);
             LeftBuckets_[bucket].Overflow.reserve(leftOverflowSizeEst);
             RightBuckets_[bucket].Overflow.reserve(rightOverflowSizeEst);
         }
@@ -1199,21 +1188,10 @@ private:
         auto *const overflow = joinState.ProbePackedInput.Overflow.data();
         auto *tuple = joinState.ProbePackedInput.PackedTuples.data() + CurrProbeRow_ * probeLayout->TotalRowSize;
 
-        using TIterPair = std::pair<TTable::TIterator, const ui8*>;
-        constexpr auto batchSize = 16;
-        TVector<TIterPair> iterators(batchSize);
+        if constexpr (true) {  /// ignore batch api switch (test purpose)
+            for (; CurrProbeRow_ < nTuples && joinState.IsNotFull(); CurrProbeRow_++, tuple += probeLayout->TotalRowSize) {
+                auto it = Table_.Find(tuple, overflow);
 
-        // TODO: interrupt this loop when joinState is full as in BlockMapJoin. So track current iterator and save iterators somewhere.
-        // WARNING: we can not properly track the number of output rows due to uninterruptible for loop in DoBatchLookup,
-        // so add joinState.IsNotFull() check to prevent overflow in AddMany builder's method.
-        for (; CurrProbeRow_ < nTuples && joinState.IsNotFull(); CurrProbeRow_ += batchSize) {
-            auto remaining = std::min<ui64>(batchSize, nTuples - CurrProbeRow_);
-            for (size_t offset = 0; offset < remaining; ++offset, tuple += probeLayout->TotalRowSize) {
-                iterators[offset] = {Table_.Find(tuple, overflow), tuple};
-            }
-
-            for (size_t offset = 0; offset < remaining; ++offset) {
-                auto [it, inTuple] = iterators[offset];
                 const ui8* foundTuple = nullptr;
                 while ((foundTuple = Table_.NextMatch(it, overflow)) != nullptr) {
                     // Copy tuple from build part into output
@@ -1224,10 +1202,43 @@ private:
                     // Copy tuple from probe part into output
                     prevSize = joinState.ProbePackedOutput.size();
                     joinState.ProbePackedOutput.resize(prevSize + probeLayout->TotalRowSize);
-                    std::copy(inTuple, inTuple + probeLayout->TotalRowSize, joinState.ProbePackedOutput.data() + prevSize);
+                    std::copy(tuple, tuple + probeLayout->TotalRowSize, joinState.ProbePackedOutput.data() + prevSize);
 
                     // New row added
                     joinState.OutputRows++;
+                }
+            }
+        } else {
+            using TIterPair = std::pair<TTable::TIterator, const ui8*>;
+            constexpr auto batchSize = 16;
+            TVector<TIterPair> iterators(batchSize);
+
+            // TODO: interrupt this loop when joinState is full as in BlockMapJoin. So track current iterator and save iterators somewhere.
+            // WARNING: we can not properly track the number of output rows due to uninterruptible for loop in DoBatchLookup,
+            // so add joinState.IsNotFull() check to prevent overflow in AddMany builder's method.
+            for (; CurrProbeRow_ < nTuples && joinState.IsNotFull(); CurrProbeRow_ += batchSize) {
+                auto remaining = std::min<ui64>(batchSize, nTuples - CurrProbeRow_);
+                for (size_t offset = 0; offset < remaining; ++offset, tuple += probeLayout->TotalRowSize) {
+                    iterators[offset] = {Table_.Find(tuple, overflow), tuple};
+                }
+
+                for (size_t offset = 0; offset < remaining; ++offset) {
+                    auto [it, inTuple] = iterators[offset];
+                    const ui8* foundTuple = nullptr;
+                    while ((foundTuple = Table_.NextMatch(it, overflow)) != nullptr) {
+                        // Copy tuple from build part into output
+                        auto prevSize = joinState.BuildPackedOutput.size();
+                        joinState.BuildPackedOutput.resize(prevSize + buildLayout->TotalRowSize);
+                        std::copy(foundTuple, foundTuple + buildLayout->TotalRowSize, joinState.BuildPackedOutput.data() + prevSize);
+
+                        // Copy tuple from probe part into output
+                        prevSize = joinState.ProbePackedOutput.size();
+                        joinState.ProbePackedOutput.resize(prevSize + probeLayout->TotalRowSize);
+                        std::copy(inTuple, inTuple + probeLayout->TotalRowSize, joinState.ProbePackedOutput.data() + prevSize);
+
+                        // New row added
+                        joinState.OutputRows++;
+                    }
                 }
             }
         }
@@ -1459,6 +1470,7 @@ public:
 
         auto& tempStorage = *static_cast<TTempJoinStorage*>(tempStorageValue.AsBoxed().Get());
         auto [leftFetchedTuples, rightFetchedTuples] = tempStorage.GetFetchedTuples();
+        auto maxFetchedTuples = std::max(leftFetchedTuples, rightFetchedTuples);
         auto [leftPSz, rightPSz] = tempStorage.GetPayloadSizes();
         auto cardinality = tempStorage.EstimateCardinality(); // bootstrap value, may be far from truth
         auto [leftData, rightData] = tempStorage.DetachData();
@@ -1472,7 +1484,7 @@ public:
         // Use or not external payload depends on the policy
         /// TODO: support indexed payload, currently it is ignored
         leftSide.IsIndirected = policy->UseExternalPayload(
-            EJoinAlgo::HashJoin, leftPSz, leftFetchedTuples / cardinality);
+            EJoinAlgo::HashJoin, leftPSz, maxFetchedTuples / cardinality);
 
         auto& rightSide = JoinSides_[kRightSide];
         rightSide.Stream = *rightStream;
@@ -1480,7 +1492,7 @@ public:
         auto rightKeyColumnsSet = THashSet<ui32>(rightKeyColumns->begin(), rightKeyColumns->end());
         // Use or not external payload depends on the policy
         rightSide.IsIndirected = policy->UseExternalPayload(
-            EJoinAlgo::HashJoin, rightPSz, rightFetchedTuples / cardinality);
+            EJoinAlgo::HashJoin, rightPSz, maxFetchedTuples / cardinality);
 
         // Create converters
         TVector<TType*> leftItemTypes;
