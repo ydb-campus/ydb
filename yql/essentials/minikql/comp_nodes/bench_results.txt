@@ -1,0 +1,161 @@
+------- [TM] {default-linux-x86_64, release} yql/essentials/minikql/comp_nodes/llvm16/ut/unittest >> TMiniKQLJoinBench
+Test command err:
+>>> Benchmark Q14:
+Q14.
+left table rows: 1000000
+right table rows: 1000000
+key repeats: 10
+=========================================
+---------- Run N. 0 begin  -----------
+Node: BlockGraceJoin::InMemoryGraceJoin
+ > Dataset size:     103014 [KB]
+ > Total time spent: 324521 [us]
+   > "Build": 15608 [us]
+   > "Probe": 143491 [us]
+   > "Partition": 175760 [us]
+ > Speed:            325 [MB/s]
+ > Avg. memory consumption: 1510309 [KB]
+ > Max memory consumption:  1889692 [KB]
+Node: BlockGraceJoin::HashJoin
+ > Dataset size:     103014 [KB]
+ > Total time spent: 496113 [us]
+   > "Build": 154710 [us]
+   > "Probe": 338055 [us]
+ > Speed:            212 [MB/s]
+ > Avg. memory consumption: 1481858 [KB]
+ > Max memory consumption:  1733064 [KB]
+Node: CurrentGraceJoin
+ > Dataset size:     103014 [KB]
+ > Total time spent: 971018 [us]
+ > Speed:            108 [MB/s]
+ > Avg. memory consumption: 1611598 [KB]
+ > Max memory consumption:  1769600 [KB]
+Node: BlockMapJoin
+ > Dataset size:     103014 [KB]
+ > Total time spent: 893513 [us]
+ > Speed:            118 [MB/s]
+ > Avg. memory consumption: 1583221 [KB]
+ > Max memory consumption:  1709427 [KB]
+----------- Run N. 0 end  ------------
+=========================================
+>>> Benchmark Q14:
+Q14.
+left table rows: 1000000
+right table rows: 1000000
+key repeats: 100
+=========================================
+---------- Run N. 0 begin  -----------
+Node: BlockGraceJoin::InMemoryGraceJoin
+ > Dataset size:     103035 [KB]
+ > Total time spent: 585415 [us]
+   > "Build": 30195 [us]
+   > "Probe": 261414 [us]
+   > "Partition": 315674 [us]
+ > Speed:            180 [MB/s]
+ > Avg. memory consumption: 1510410 [KB]
+ > Max memory consumption:  1889884 [KB]
+Node: BlockGraceJoin::HashJoin
+ > Dataset size:     103035 [KB]
+ > Total time spent: 847562 [us]
+   > "Build": 297222 [us]
+   > "Probe": 543859 [us]
+ > Speed:            124 [MB/s]
+ > Avg. memory consumption: 1481956 [KB]
+ > Max memory consumption:  1733334 [KB]
+Node: CurrentGraceJoin
+ > Dataset size:     103035 [KB]
+ > Total time spent: 1908946 [us]
+ > Speed:            55 [MB/s]
+ > Avg. memory consumption: 1615327 [KB]
+ > Max memory consumption:  1777216 [KB]
+Node: BlockMapJoin
+ > Dataset size:     103035 [KB]
+ > Total time spent: 1749727 [us]
+ > Speed:            60 [MB/s]
+ > Avg. memory consumption: 1583402 [KB]
+ > Max memory consumption:  1709631 [KB]
+----------- Run N. 0 end  ------------
+=========================================
+>>> Benchmark Q14:
+Q14.
+left table rows: 1000000
+right table rows: 1000000
+key repeats: 1000
+=========================================
+---------- Run N. 0 begin  -----------
+Node: BlockGraceJoin::InMemoryGraceJoin
+ > Dataset size:     103007 [KB]
+ > Total time spent: 822231 [us]
+   > "Build": 43980 [us]
+   > "Probe": 409614 [us]
+   > "Partition": 401711 [us]
+ > Speed:            128 [MB/s]
+ > Avg. memory consumption: 1520395 [KB]
+ > Max memory consumption:  1889884 [KB]
+Node: BlockGraceJoin::HashJoin
+ > Dataset size:     103007 [KB]
+ > Total time spent: 1182155 [us]
+   > "Build": 338088 [us]
+   > "Probe": 835181 [us]
+ > Speed:            89 [MB/s]
+ > Avg. memory consumption: 1506592 [KB]
+ > Max memory consumption:  1753537 [KB]
+Node: CurrentGraceJoin
+ > Dataset size:     103007 [KB]
+ > Total time spent: 3133386 [us]
+ > Speed:            33 [MB/s]
+ > Avg. memory consumption: 1615034 [KB]
+ > Max memory consumption:  1777216 [KB]
+Node: BlockMapJoin
+ > Dataset size:     103007 [KB]
+ > Total time spent: 2530515 [us]
+ > Speed:            41 [MB/s]
+ > Avg. memory consumption: 1583506 [KB]
+ > Max memory consumption:  1709631 [KB]
+----------- Run N. 0 end  ------------
+=========================================
+>>> Benchmark Q14:
+Q14.
+left table rows: 1000000
+right table rows: 1000000
+key repeats: 10000
+=========================================
+---------- Run N. 0 begin  -----------
+Node: BlockGraceJoin::InMemoryGraceJoin
+ > Dataset size:     103016 [KB]
+ > Total time spent: 1026542 [us]
+   > "Build": 56976 [us]
+   > "Probe": 529361 [us]
+   > "Partition": 484307 [us]
+ > Speed:            102 [MB/s]
+ > Avg. memory consumption: 1522123 [KB]
+ > Max memory consumption:  1889884 [KB]
+Node: BlockGraceJoin::HashJoin
+ > Dataset size:     103016 [KB]
+ > Total time spent: 1418116 [us]
+   > "Build": 374644 [us]
+   > "Probe": 1032645 [us]
+ > Speed:            74 [MB/s]
+ > Avg. memory consumption: 1516436 [KB]
+ > Max memory consumption:  1753601 [KB]
+Node: CurrentGraceJoin
+ > Dataset size:     103016 [KB]
+ > Total time spent: 5125602 [us]
+ > Speed:            20 [MB/s]
+ > Avg. memory consumption: 1614039 [KB]
+ > Max memory consumption:  1777216 [KB]
+Node: BlockMapJoin
+ > Dataset size:     103016 [KB]
+ > Total time spent: 3169446 [us]
+ > Speed:            33 [MB/s]
+ > Avg. memory consumption: 1582909 [KB]
+ > Max memory consumption:  1709631 [KB]
+----------- Run N. 0 end  ------------
+=========================================
+Number of suites by filter TMiniKQLJoinBenchmarks::BenchQ14
+
+Total 1 suite:
+	1 - GOOD
+Total 1 test:
+	1 - GOOD
+Ok
