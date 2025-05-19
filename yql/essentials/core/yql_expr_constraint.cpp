@@ -210,6 +210,7 @@ public:
         Functions["EquiJoin"] = &TCallableConstraintTransformer::EquiJoinWrap;
         Functions["JoinDict"] = &TCallableConstraintTransformer::JoinDictWrap;
         Functions["MapJoinCore"] = &TCallableConstraintTransformer::MapJoinCoreWrap;
+        Functions["BlockGraceJoinCore"] = &TCallableConstraintTransformer::BlockGraceJoinCoreWrap;
         Functions["GraceJoinCore"] = &TCallableConstraintTransformer::GraceJoinCoreWrap;
         Functions["GraceSelfJoinCore"] = &TCallableConstraintTransformer::GraceSelfJoinCoreWrap;
         Functions["CommonJoinCore"] = &TCallableConstraintTransformer::FromFirst<TEmptyConstraintNode>;
@@ -2429,6 +2430,10 @@ private:
                 input->AddConstraint(distinct);
         }
 
+        return TStatus::Ok;
+    }
+
+    TStatus BlockGraceJoinCoreWrap(const TExprNode::TPtr& , TExprNode::TPtr& , TExprContext& ) const {
         return TStatus::Ok;
     }
 

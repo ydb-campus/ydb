@@ -246,6 +246,7 @@ TExprBase DqPeepholeRewriteMapJoinWithGraceCore(const TExprBase& node, TExprCont
         flags = maybeFlags.Cast().Ref().ChildrenList();
     }
 
+    std::cerr << "MISHA rewrite map" << std::endl;
     auto graceJoinCore = Build<TCoGraceJoinCore>(ctx, pos)
             .LeftInput(std::move(leftInput))
             .RightInput(std::move(rightInput))

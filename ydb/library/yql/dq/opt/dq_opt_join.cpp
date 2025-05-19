@@ -446,6 +446,8 @@ TDqJoinBase DqMakePhyMapJoin(const TDqJoin& join, const TExprBase& leftInput, co
             .Add<TCoAtom>().Value("Broadcast").Build()
             .Done();
 
+        std::cerr << "MISHA GRACEJOIN Phy" << std::endl;
+
         return Build<TDqPhyGraceJoin>(ctx, join.Pos())
             .LeftInput(leftFilteredInput)
             .LeftLabel(join.LeftLabel())
@@ -1546,6 +1548,8 @@ TExprBase DqBuildHashJoin(const TDqJoin& join, EHashJoinMode mode, TExprContext&
     switch (mode) {
         case EHashJoinMode::GraceAndSelf:
         case EHashJoinMode::Grace:
+            std::cerr << "MISHA GRACEJOIN Simple" << std::endl;
+            callableName = "BlockGraceJoinCore";
             hashJoin = ctx.Builder(join.Pos())
                 .Callable(callableName)
                     .Do([&](TExprNodeBuilder& parent) -> TExprNodeBuilder& {
