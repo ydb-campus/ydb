@@ -1,11 +1,7 @@
-PROGRAM(hist_shuffle)
+PROGRAM(dataset_generator)
 
 SRCS(
     main.cpp
-    histogram.cpp
-    merger.cpp
-    partitioner.cpp
-    hasher.cpp
 )
 
 PEERDIR(
