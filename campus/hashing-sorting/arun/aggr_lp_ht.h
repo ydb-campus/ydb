@@ -16,11 +16,12 @@
 // 7. HT is insert/update only, no delete
 
 class TLPHashTable {
-
 public:
-    TLPHashTable(ui64 * buffer, ui32 prefixSize, ui32 keyCount, ui32 rowSize)
-        : Buffer(buffer), KeyCount(keyCount), RowSize(rowSize) {
-
+    TLPHashTable(ui64* buffer, ui32 prefixSize, ui32 keyCount, ui32 rowSize)
+        : Buffer(buffer)
+        , KeyCount(keyCount)
+        , RowSize(rowSize)
+    {
         assert(prefixSize >= 2);
         assert(keyCount + 2 <= rowSize);
         SlotCount = 1ull << prefixSize;
@@ -34,7 +35,7 @@ public:
 
     bool Insert(ui64 hash, ui64* keys) {
         ui32 firstProbeIndex = hash >> ShiftCount;
-        ui64 * record = Buffer + firstProbeIndex * RowSize;
+        ui64* record = Buffer + firstProbeIndex * RowSize;
         auto i = firstProbeIndex;
         bool collision = false;
         while (true) {
@@ -75,7 +76,7 @@ public:
     }
 
 public:
-    ui64 *Buffer;
+    ui64* Buffer;
     ui32 KeyCount;
     ui32 RowSize;
     ui32 SlotCount;

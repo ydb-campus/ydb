@@ -3,18 +3,17 @@
 #include <util/system/types.h>
 
 class TSpillingBlock {
-
 public:
     void* ExternalMemory;
     ui64 BlockSize;
-    ui64 Data;
+    // ui64 Data;
 };
 
 class TSpilling {
-
 public:
-    TSpilling(ui64 chunkSize) : ChunkSize(chunkSize) {
-
+    TSpilling(ui64 chunkSize)
+        : ChunkSize(chunkSize)
+    {
     }
 
     TSpillingBlock Empty(ui64 data);

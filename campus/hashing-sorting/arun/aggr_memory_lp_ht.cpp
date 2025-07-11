@@ -2,17 +2,16 @@
 #include "aggr_lp_ht.h"
 
 void aggr_memory_lp_ht(TFileInput& fi, TFileOutput& fo, ui64 rowCount, ui32 keyCount, ui64 cardinality) {
-
     auto prefixSize = round_to_nearest_power_of_two(cardinality) + 1;
     auto slotCount = 1ull << prefixSize;
     ui32 slotSize = 8;
-    ui64 * buffer = new ui64[slotCount * slotSize];
+    ui64* buffer = new ui64[slotCount * slotSize];
 
     TLPHashTable ht(buffer, prefixSize, keyCount, slotSize);
 
     ui64 n = 1024;
 
-    ui64 * readBuffer = new ui64[8 * n];
+    ui64* readBuffer = new ui64[8 * n];
 
     while (rowCount) {
         ui64 d = rowCount > n ? n : rowCount;
@@ -30,9 +29,9 @@ void aggr_memory_lp_ht(TFileInput& fi, TFileOutput& fo, ui64 rowCount, ui32 keyC
 
     delete[] readBuffer;
 
-    ui64 * writeBuffer = new ui64[(keyCount + 2) * n];
+    ui64* writeBuffer = new ui64[(keyCount + 2) * n];
 
-    ui64 * wb = writeBuffer;
+    ui64* wb = writeBuffer;
     ui64 nw = 0;
     ui64 nn = 0;
     ui64 sum = 0;

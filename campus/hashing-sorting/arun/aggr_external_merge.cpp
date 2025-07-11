@@ -1,131 +1,16 @@
 #include "aggr.h"
 #include "aggr_rh_ht.h"
-#include "spilling_mem.h"
-
+#include "campus/hashing-sorting/arun/spilling_mem.h"
+#include "merge_pway_input_data.h"
 #include <util/stream/format.h>
-
+#include <campus/hashing-sorting/arun/pmerge/ydb/merge_spilling_blocks.hpp>
 #include <vector>
 #include <deque>
 
-constexpr ui32 slotSize = 8;
-
-template <ui32 keyCount>
-struct TInputData {
-
-    TInputData() {
-
-    }
-
-    TInputData(TSpillingBlock block, ui64 *buffer, ui64 bufferSize) {
-        Init(block, buffer, bufferSize);
-    }
-
-    void Init(TSpillingBlock block, ui64 *buffer, ui64 bufferSize) {
-        Block = block;
-        Offset = 0;
-        Count = 0;
-        Size = Block.BlockSize / (slotSize * 8);
-        Buffer = buffer;
-        BufferSize = bufferSize;
-        Record = Buffer;
-        EndOfBuffer = Buffer;
-    }
-
-    bool Next(TSpilling& sp) {
-        while (true) {
-            while (Record < EndOfBuffer && Record[slotSize - 1] == 0) {
-                Record += slotSize;
-            }
-
-            if (Record < EndOfBuffer) {
-                return true;
-            }
-
-            if (Offset == Size) {
-                return false;
-            }
-
-            Count = std::min(BufferSize, Size - Offset);
-            sp.Load(Block, Offset * slotSize * 8, Buffer, Count * slotSize * 8);
-            Offset += Count;
-            Record = Buffer;
-            EndOfBuffer = Buffer + Count * slotSize;
-        }
-    }
-
-    inline ui32 Compare(ui64 *& record, ui64& count, ui32 mask, ui32 ownMask) {
-        if (Record >= EndOfBuffer) {
-            return mask;
-        }
-        if (mask == 0) {
-            count = Record[slotSize - 1];
-            record = Record;
-            return ownMask;
-        } else {
-            if (record[0] < Record[0]) {
-                return mask;
-            } else if (record[0] > Record[0]) {
-                count = Record[slotSize - 1];
-                record = Record;
-                return ownMask;
-            }
-
-            // record[0] == Record[0]
-
-            if constexpr (keyCount == 1) {
-                if (record[1] == Record[1]) {
-                    count += Record[slotSize - 1];
-                    return (mask | ownMask);
-                }
-            } else if constexpr (keyCount == 2) {
-                if (record[1] == Record[1] && record[2] == Record[2]) {
-                    count += Record[slotSize - 1];
-                    return (mask | ownMask);
-                }
-            } else if constexpr (keyCount == 3) {
-                if (record[1] == Record[1] && record[2] == Record[2] && record[3] == Record[3]) {
-                    count += Record[slotSize - 1];
-                    return (mask | ownMask);
-                }
-            } else if constexpr (keyCount == 4) {
-                if (record[1] == Record[1] && record[2] == Record[2] && record[3] == Record[3] && record[4] == Record[4]) {
-                    count += Record[slotSize - 1];
-                    return (mask | ownMask);
-                }
-            }
-
-            for (ui32 i = 1; i < keyCount + 1; i++) {
-                if (record[i] < Record[i]) {
-                    return mask;
-                } else if (record[i] > Record[i]) {
-                    count = Record[slotSize - 1];
-                    record = Record;
-                    return ownMask;
-                }
-            }
-
-            count += Record[slotSize - 1];
-            return (mask | ownMask);
-        }
-    }
-
-    inline void IncIfUse(ui32 mask, ui32 ownMask) {
-        Record += ((mask & ownMask) != 0) * slotSize;
-    }
-
-    TSpillingBlock Block;
-    ui64 *Buffer;
-    ui64 *Record;
-    ui64 *EndOfBuffer;
-    ui64 BufferSize;
-    ui64 Offset;
-    ui64 Count;
-    ui64 Size;
-};
-
+namespace reference{
 template <bool finalize, ui32 keyCount, ui32 p>
-ui32 merge2pway(ui64 * partBuffer, ui32 partBufferSize, TFileOutput& fo, TSpilling& sp, std::deque<TSpillingBlock>& spills) {
-
+ui32 merge2pway(ui64 * partBuffer, ui32 partBufferSize, TSpilling& sp, std::deque<TSpillingBlock>& spills) {
+    static_assert(!finalize, "writing in final format is not implemented");
     constexpr ui32 n = 1ul << p;
     auto inputBufferSize = partBufferSize >> (p + 1);
     auto mergeBufferSize = partBufferSize >> 1;
@@ -154,6 +39,10 @@ ui32 merge2pway(ui64 * partBuffer, ui32 partBufferSize, TFileOutput& fo, TSpilli
             break;
         }
 
+
+        // REWRITE THIS TO PRODUCE USE USE UI32(BASICALLY "WHICH ARRAYS HAVE CURRENT MINIMUM").
+        // THIS SHOULD BE CONST LOSER-TREE WISE.
+        // ALSO PRODUCE RECORD AND COUNT. RECORD IS (HASH, KEY). COUNT IS SUMM OF COUNTS OF ALL ELEMENTS(WHATEVER)
         ui64 count = 0;
         ui64 * record = nullptr;
 
@@ -161,6 +50,7 @@ ui32 merge2pway(ui64 * partBuffer, ui32 partBufferSize, TFileOutput& fo, TSpilli
         for (ui32 i = 0; i < n; i++) {
             use = data[i].Compare(record, count, use, 1 << i);
         }
+        // END REWRITE
 
         if constexpr (finalize) {
             auto recordm = mergeBuffer + indexm * (keyCount + 2);
@@ -172,13 +62,23 @@ ui32 merge2pway(ui64 * partBuffer, ui32 partBufferSize, TFileOutput& fo, TSpilli
             recordm[slotSize - 1] = count;
         }
 
+        // THIS SHOULD CHANGE TOO. NOT SURE YET.
+        // I HAVE LOSER TREE. THATS IT.
+        // NOW I DO NEED BUFFERING.
+        // I NEED TO HAVE AN ARRAY OF (USE, COUNT, RECORD) - GENERAL CASE,
+        // MOST OF THE TIME THIS ARRAY WILL HAVE SIZE 1
+        // DO I NEED USE ACTUALLY?
+        // PROBABLY NOT. Compare WILL JUST POP THE SMALLEST ELEMENT(SO IT WILL NOT BE CONST).
+        // IF THERE IS NOTHING TO POP, THAN I WILL GET BATCH FROM LOSER TREE. 
+        // WITH THIS BATCH, I WILL LOAD NECESSARY THINGS FROM RAM (USE-LIKE THING WILL BE HANDY HERE) 
+
+
         for (ui32 i = 0; i < n; i++) {
             data[i].IncIfUse(use, 1 << i);
         }
 
         if (Y_UNLIKELY(++indexm == mergeBufferSize)) {
             if constexpr (finalize) {
-                fo.Write(mergeBuffer, indexm * (keyCount + 2) * 8);
             } else {
                 merged = sp.Append(merged, mergeBuffer, indexm * slotSize * 8);
             }
@@ -192,7 +92,6 @@ ui32 merge2pway(ui64 * partBuffer, ui32 partBufferSize, TFileOutput& fo, TSpilli
     }
 
     if constexpr (finalize) {
-        fo.Write(mergeBuffer, indexm * (keyCount + 2) * 8);
     } else {
         spills.push_back(sp.Append(merged, mergeBuffer, indexm * slotSize * 8));
     }
@@ -200,10 +99,10 @@ ui32 merge2pway(ui64 * partBuffer, ui32 partBufferSize, TFileOutput& fo, TSpilli
 
     return result;
 }
-
+} // namespace reference 
 
 template <ui32 keyCount>
-void aggr_external_merge(TFileInput& fi, TFileOutput& fo, ui64 rowCount, ui64 cardinality, ui16 hashBits, ui16 fillRatio, ui32 partBufferSize) {
+void aggr_external_merge(TFileInput& fi, ui64 rowCount, ui64 cardinality, ui16 hashBits, ui16 fillRatio, ui32 partBufferSize, bool simd_approach) {
 
     Cout << "Robin Hood HT, aggregation in External Memory with Merge combine" << Endl;
 
@@ -296,95 +195,44 @@ void aggr_external_merge(TFileInput& fi, TFileOutput& fo, ui64 rowCount, ui64 ca
 
         switch (std::min<ui32>(spills.size(), partBufferSize >> 1)) {
         case 0:
-            break;
         case 1:
         {
-            auto inputBufferSize = partBufferSize >> 1;
-            auto mergeBufferSize = partBufferSize >> 1;
-
-            auto mergeBuffer = partBuffer + inputBufferSize * slotSize;
-
-            auto block = spills.front();
-            spills.pop_front();
-
-            ui32 offset = 0;
-            auto size = block.BlockSize / (slotSize * 8);
-            ui32 indexm = 0;
-            ui64 * recordm = mergeBuffer;
-
-            while (offset < size) {
-                auto count = std::min<ui32>(inputBufferSize, size - offset);
-                sp.Load(block, offset * slotSize * 8, partBuffer, count * slotSize * 8);
-                offset += count;
-
-                ui64 * record = partBuffer;
-
-                for (ui32 i = 0; i < count; i++) {
-                    if (record[slotSize - 1]) {
-                        std::copy(record, record + 1 + keyCount, recordm);
-                        recordm[keyCount + 1] = record[slotSize - 1];
-                        recordm += (keyCount + 2);
-                        indexm++;
-
-                        if (indexm == mergeBufferSize) {
-                            fo.Write(mergeBuffer, indexm * (keyCount + 2) * 8);
-                            nw += indexm;
-                            recordm = mergeBuffer;
-                            indexm = 0;
-                        }
-                    }
-                    record += slotSize;
-                }
-
-            }
-
-            if (indexm) {
-                fo.Write(mergeBuffer, indexm * (keyCount + 2) * 8);
-                nw += indexm;
-            }
-
-            sp.Delete(block);
-
             break;
         }
         case 2: case 3:
         {
-            bool finalize = spills.size() == 2;
-            if (finalize) {
-                nw += merge2pway<true, keyCount, 1>(partBuffer, partBufferSize, fo, sp, spills);
+            if (simd_approach) {
+                nw += pmerge::ydb::merge2pway<false, keyCount, 1>(partBuffer, partBufferSize,  sp, spills);
             } else {
-                merge2pway<false, keyCount, 1>(partBuffer, partBufferSize, fo, sp, spills);
+                nw += reference::merge2pway<false, keyCount, 1>(partBuffer, partBufferSize,  sp, spills);
             }
             break;
         }
         case 4: case 5: case 6: case 7:
         {
-            bool finalize = spills.size() == 4;
-            if (finalize) {
-                nw += merge2pway<true, keyCount, 2>(partBuffer, partBufferSize, fo, sp, spills);
+            if (simd_approach) {
+                nw += pmerge::ydb::merge2pway<false, keyCount, 2>(partBuffer, partBufferSize,  sp, spills);
             } else {
-                merge2pway<false, keyCount, 2>(partBuffer, partBufferSize, fo, sp, spills);
+                nw += reference::merge2pway<false, keyCount, 2>(partBuffer, partBufferSize,  sp, spills);
             }
             break;
         }
         case 8: case 9: case 10: case 11:
         case 12: case 13: case 14: case 15:
         {
-            bool finalize = spills.size() == 8;
-            if (finalize) {
-                nw += merge2pway<true, keyCount, 3>(partBuffer, partBufferSize, fo, sp, spills);
+            if (simd_approach) {
+                nw += pmerge::ydb::merge2pway<false, keyCount, 3>(partBuffer, partBufferSize,  sp, spills);
             } else {
-                merge2pway<false, keyCount, 3>(partBuffer, partBufferSize, fo, sp, spills);
+                nw += reference::merge2pway<false, keyCount, 3>(partBuffer, partBufferSize,  sp, spills);
             }
             break;
         }
         default:
         {
-            bool finalize = spills.size() == 16;
-            if (finalize) {
-                nw += merge2pway<true, keyCount, 4>(partBuffer, partBufferSize, fo, sp, spills);
+            if (simd_approach) {
+                nw += pmerge::ydb::merge2pway<false, keyCount, 4>(partBuffer, partBufferSize,  sp, spills);
             } else {
-                merge2pway<false, keyCount, 4>(partBuffer, partBufferSize, fo, sp, spills);
+                nw += reference::merge2pway<false, keyCount, 4>(partBuffer, partBufferSize,  sp, spills);
             }
             break;
         }
@@ -402,13 +250,13 @@ void aggr_external_merge(TFileInput& fi, TFileOutput& fo, ui64 rowCount, ui64 ca
 }
 
 template
-void aggr_external_merge<1>(TFileInput& fi, TFileOutput& fo, ui64 rowCount, ui64 cardinality, ui16 hashBits, ui16 fillRatio, ui32 partBufferSize);
+void aggr_external_merge<1>(TFileInput& fi, ui64 rowCount, ui64 cardinality, ui16 hashBits, ui16 fillRatio, ui32 partBufferSize, bool simd_approach );
 
 template
-void aggr_external_merge<2>(TFileInput& fi, TFileOutput& fo, ui64 rowCount, ui64 cardinality, ui16 hashBits, ui16 fillRatio, ui32 partBufferSize);
+void aggr_external_merge<2>(TFileInput& fi, ui64 rowCount, ui64 cardinality, ui16 hashBits, ui16 fillRatio, ui32 partBufferSize, bool simd_approach);
 
 template
-void aggr_external_merge<3>(TFileInput& fi, TFileOutput& fo, ui64 rowCount, ui64 cardinality, ui16 hashBits, ui16 fillRatio, ui32 partBufferSize);
+void aggr_external_merge<3>(TFileInput& fi, ui64 rowCount, ui64 cardinality, ui16 hashBits, ui16 fillRatio, ui32 partBufferSize, bool simd_approach);
 
 template
-void aggr_external_merge<4>(TFileInput& fi, TFileOutput& fo, ui64 rowCount, ui64 cardinality, ui16 hashBits, ui16 fillRatio, ui32 partBufferSize);
+void aggr_external_merge<4>(TFileInput& fi, ui64 rowCount, ui64 cardinality, ui16 hashBits, ui16 fillRatio, ui32 partBufferSize, bool simd_approach);

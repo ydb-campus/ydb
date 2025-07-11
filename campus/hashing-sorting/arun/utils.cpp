@@ -14,7 +14,7 @@ ui32 round_to_nearest_power_of_two(ui64 n) {
     return 0;
 }
 
-ui64 hash_keys(ui64 * keys, ui64 keyCount) {
+ui64 hash_keys(ui64* keys, ui64 keyCount) {
     assert(keyCount > 0);
     ui64 result = THash<ui64>()(*keys++);
     for (ui64 i = 1; i < keyCount; i++) {
