@@ -1,0 +1,3 @@
+[submodule "pmerge"]
+	path = campus/hashing-sorting/pmerge
+	url = https://github.com/nfrmtk/p-way-merge.git
