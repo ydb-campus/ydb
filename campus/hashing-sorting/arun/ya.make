@@ -9,6 +9,9 @@ SRCS(
     main.cpp
     spilling_mem.cpp
     utils.cpp
+    pmerge/common/resource.cpp
+    pmerge/common/vector_resource.cpp
+    pmerge/simd/utils.cpp
 )
 
 PEERDIR(

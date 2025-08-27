@@ -1,26 +1,26 @@
-#include "spilling_mem.h"
+#include "campus/hashing-sorting/arun/spilling_mem.h"
 
 #include <stdlib.h>
 
 #include <algorithm>
 #include <cstring>
 
-TSpillingBlock TSpilling::Empty(ui64 data) {
+TSpillingBlock TSpilling::Empty(ui64) {
     TSpillingBlock block;
 
     block.ExternalMemory = nullptr;
     block.BlockSize = 0;
-    block.Data = data;
+    // block.Data = data;
 
     return block;
 }
 
-TSpillingBlock TSpilling::Save(void* buffer, ui64 size, ui64 data) {
+TSpillingBlock TSpilling::Save(void* buffer, ui64 size, ui64) {
     TSpillingBlock block;
     block.ExternalMemory = malloc(size);
     block.BlockSize = size;
     std::memcpy(block.ExternalMemory, buffer, size);
-    block.Data = data;
+    // block.Data = data;
 
     auto chunkCount = (size + (ChunkSize - 1)) / ChunkSize;
     WriteChunkCount += chunkCount;
@@ -35,8 +35,8 @@ TSpillingBlock TSpilling::Append(TSpillingBlock currentBlock, void* buffer, ui64
     auto newSize = currentBlock.BlockSize + size;
     block.ExternalMemory = realloc(currentBlock.ExternalMemory, newSize);
     block.BlockSize = newSize;
-    std::memcpy(reinterpret_cast<char *>(block.ExternalMemory) + currentBlock.BlockSize, buffer, size);
-    block.Data = currentBlock.Data;
+    std::memcpy(reinterpret_cast<char*>(block.ExternalMemory) + currentBlock.BlockSize, buffer, size);
+    // block.Data = currentBlock.Data;
 
     auto currentChunkCount = (currentBlock.BlockSize + (ChunkSize - 1)) / ChunkSize;
     auto newChunkCount = (newSize + (ChunkSize - 1)) / ChunkSize;
@@ -48,7 +48,7 @@ TSpillingBlock TSpilling::Append(TSpillingBlock currentBlock, void* buffer, ui64
 }
 
 void TSpilling::Load(TSpillingBlock block, ui64 offset, void* buffer, ui64 size) {
-    std::memcpy(buffer, reinterpret_cast<char *>(block.ExternalMemory) + offset, size);
+    std::memcpy(buffer, reinterpret_cast<char*>(block.ExternalMemory) + offset, size);
     ReadChunkCount += (size + (ChunkSize - 1)) / ChunkSize;
 }
 

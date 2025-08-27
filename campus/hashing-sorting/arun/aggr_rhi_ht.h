@@ -18,11 +18,12 @@
 constexpr ui64 EMPTY = 0xFFFFFFFFFFFFull;
 
 class TRHIndirectHashTable {
-
 public:
-    TRHIndirectHashTable(ui64 * buffer, ui32 prefixSize, ui32 keyCount, ui32 rowSize)
-        : Buffer(buffer), KeyCount(keyCount), RowSize(rowSize) {
-
+    TRHIndirectHashTable(ui64* buffer, ui32 prefixSize, ui32 keyCount, ui32 rowSize)
+        : Buffer(buffer)
+        , KeyCount(keyCount)
+        , RowSize(rowSize)
+    {
         assert(prefixSize >= 2);
         assert(keyCount + 2 <= rowSize);
         SlotCount = 1ull << prefixSize;
@@ -47,7 +48,7 @@ public:
 
     bool Insert(ui64 hash, ui64* keys) {
         // prepare item
-        ui64 *item = Count == SlotCount ? Record : Buffer + Count * RowSize;
+        ui64* item = Count == SlotCount ? Record : Buffer + Count * RowSize;
         item[0] = hash;
         std::copy(keys, keys + KeyCount, item + 1);
         item[CountIndex] = 1;
@@ -103,17 +104,16 @@ public:
         }
     }
 
-
     ui64* GetSlot(ui32 index) {
         auto slotIndex = Indices[index];
         return slotIndex == EMPTY ? EmptyRecord : Buffer + slotIndex * RowSize;
     }
 
 public:
-    ui64 *Buffer;
-    ui64 *Record;
-    ui64 *EmptyRecord;
-    ui64 *Indices;
+    ui64* Buffer;
+    ui64* Record;
+    ui64* EmptyRecord;
+    ui64* Indices;
     ui32 KeyCount;
     ui32 RowSize;
     ui32 SlotCount;

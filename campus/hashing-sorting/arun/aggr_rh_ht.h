@@ -16,11 +16,12 @@
 // 7. HT is insert/update only, no delete
 
 class TRHHashTable {
-
 public:
-    TRHHashTable(ui64 * buffer, ui32 prefixSize, ui32 keyCount, ui32 rowSize)
-        : Buffer(buffer), KeyCount(keyCount), RowSize(rowSize) {
-
+    TRHHashTable(ui64* buffer, ui32 prefixSize, ui32 keyCount, ui32 rowSize)
+        : Buffer(buffer)
+        , KeyCount(keyCount)
+        , RowSize(rowSize)
+    {
         assert(prefixSize >= 2);
         assert(keyCount + 2 <= rowSize);
         SlotCount = 1ull << prefixSize;
@@ -41,7 +42,7 @@ public:
         CollisionSwapCount = 0;
         CollisionProbes = 0;
         MinHashIndex = 0;
-        ui64 * record = Buffer;
+        ui64* record = Buffer;
         for (ui32 i = 0; i < SlotCount; i++) {
             record[CountIndex] = 0;
             record += RowSize;
@@ -55,7 +56,7 @@ public:
         Record[CountIndex] = count;
 
         ui32 firstProbeIndex = std::max<ui64>(hash >> ShiftCount, MinHashIndex);
-        ui64 * record = Buffer + firstProbeIndex * RowSize;
+        ui64* record = Buffer + firstProbeIndex * RowSize;
         auto index = firstProbeIndex;
         auto overflow = false;
         while (true) {
@@ -163,14 +164,13 @@ public:
         }
     }
 
-
     ui64* GetSlot(ui32 index) {
         return Buffer + index * RowSize;
     }
 
 public:
-    ui64 *Buffer;
-    ui64 *Record;
+    ui64* Buffer;
+    ui64* Record;
     ui32 KeyCount;
     ui32 RowSize;
     ui64 SlotCount;

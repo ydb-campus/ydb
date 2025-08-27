@@ -5,7 +5,6 @@
 #include "aggr.h"
 
 int main(int argc, const char* argv[]) {
-
     TString algo;
     ui16 keyCount;
     ui16 keyCardinality;
@@ -83,23 +82,42 @@ int main(int argc, const char* argv[]) {
             case 0:
                 break;
             case 1:
-                aggr_external_merge<1>(fi, fo, rows, cardinality, hashBits1, fillRatio, partBufferSize2);
+                aggr_external_merge<1>(fi, rows, cardinality, hashBits1, fillRatio, partBufferSize2, false);
                 break;
             case 2:
-                aggr_external_merge<2>(fi, fo, rows, cardinality, hashBits1, fillRatio, partBufferSize2);
+                aggr_external_merge<2>(fi, rows, cardinality, hashBits1, fillRatio, partBufferSize2, false);
                 break;
             case 3:
-                aggr_external_merge<3>(fi, fo, rows, cardinality, hashBits1, fillRatio, partBufferSize2);
+                aggr_external_merge<3>(fi, rows, cardinality, hashBits1, fillRatio, partBufferSize2, false);
                 break;
             case 4:
-                aggr_external_merge<4>(fi, fo, rows, cardinality, hashBits1, fillRatio, partBufferSize2);
+                aggr_external_merge<4>(fi, rows, cardinality, hashBits1, fillRatio, partBufferSize2, false);
                 break;
             default:
                 Cerr << "Unsupported key count " << keyCount << Endl;
         }
     } else if (algo == "mem-rhi") {
         aggr_memory_rhi_ht(fi, fo, rows, keyCount, cardinality);
-    }
+    } else if (algo == "ext-me-simd") {
+        switch (keyCount) {
+            case 0:
+                break;
+            case 1:
+                aggr_external_merge<1>(fi, rows, cardinality, hashBits1, fillRatio, partBufferSize2, true);
+                break;
+            case 2:
+                aggr_external_merge<2>(fi, rows, cardinality, hashBits1, fillRatio, partBufferSize2, true);
+                break;
+            case 3:
+                aggr_external_merge<3>(fi, rows, cardinality, hashBits1, fillRatio, partBufferSize2, true);
+                break;
+            case 4:
+                aggr_external_merge<4>(fi, rows, cardinality, hashBits1, fillRatio, partBufferSize2, true);
+                break;
+            default:
+                Cerr << "Unsupported key count " << keyCount << Endl;
+        }
 
-    return 0;
+        return 0;
+    }
 }
